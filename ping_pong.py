@@ -33,33 +33,66 @@ class Ball(DefaultSprite):
 
     def __init__(self, x, y, width, height, filename, speed):
         super().__init__(x, y, width, height, filename)
-        self.speed = speed
-        self.rotate = 60
+        self.speed_x = speed
+        self.speed_y = speed
     
     def move(self):
 
-        if self.rotate == 60:
-            self.rect.x += self.speed
-            self.rect.y += self.speed
-        elif self.rotate == 240:
-            self.rect.x -= self.speed
-            self.rect.y -= self.speed
+        self.rect.x += self.speed_x
+        self.rect.y += self.speed_y
 
         if self.rect.y >= WINDOW_SIZE[1]:
-            self.rotate = 240
+            self.speed_y *= -1
 
         if self.rect.y <= 0:
-            self.rotate = 60
+            self.speed_y *= -1
 
-ball = Ball(0, 0, 50, 50, "ball.jpg", 1)
+
+class Platform(DefaultSprite):
+
+    def __init__(self, x, y, width, height, filename, id):
+        super().__init__(x, y, width, height, filename)
+        self.id = id
+    
+    def move(self):
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_w] and self.rect.y > 0 and self.id == 1:
+            self.rect.y -= 3
+        if keys[pygame.K_s] and self.rect.y < 450 and self.id == 1:
+            self.rect.y += 3
+        if keys[pygame.K_UP] and self.rect.y > 0 and self.id == 2:
+            self.rect.y -= 3
+        if keys[pygame.K_DOWN] and self.rect.y < 450 and self.id == 2:
+            self.rect.y += 3
+
+ball = Ball(250, 350, 50, 50, "ball.jpg", 1)
+platform1 = Platform(50, 100, 10, 50, "platform.png", 1)
+platform2 = Platform(650, 100, 10, 50, "platform.png", 2)
+finish = False
+txt = pygame.font.SysFont("Arial", 40)
+text = txt.render("Game Over!", True, (255,255,255))
 
 while game:
     clock.tick(FPS)
 
-    ball.update()
+    window.fill((123,123,123))
 
-    keys = pygame.key.get_pressed()
-    ball.move()
+    if not finish:
+        platform1.move()
+        platform1.update()
+        platform2.move()
+        platform2.update()
+
+        if pygame.sprite.collide_rect(platform1, ball) or pygame.sprite.collide_rect(platform2, ball):
+            ball.speed_x *= -1
+    
+        if ball.rect.x < 0 or ball.rect.x > WINDOW_SIZE[0]:
+            finish = True
+        
+        ball.move()
+        ball.update()
+    else:
+        window.blit(text, (250, 350))
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
